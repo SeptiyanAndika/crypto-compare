@@ -1,22 +1,25 @@
 //const Promise = require ('bluebird');
+const loki = require('lokijs');
+const db = new loki('db.json');
 const TelegramBot = require('node-telegram-bot-api');
 const price = require('./price');
-
 const token = '';
-
 const bot = new TelegramBot(token, {polling: true});
 
-bot.onText(/\/hi/, (msg, match) => {
-  
-  const chatId = msg.chat.id; 
-  const start = new Date();
-  price.getCompareMessage(resp=>{
-	const end = new Date() - start;
-	let message = resp;
-	message+="\nExecution time: "+end+"ms";
-	console.log(`Send message to ${chatId} with body ${message}`);
-	bot.sendMessage(chatId, message, {parse_mode: 'Markdown'});
-  });
- 
+db.loadDatabase({}, function() {
+	subscribers  = db.getCollection('subscriber');
+	if(subscribers==null){
+		subscribers  = db.addCollection('subscriber');
+	}
+	
+	require("./bot")(db,subscribers,bot,price);
+	require("./scheduler")(subscribers,bot,price);
+	
 });
+
+
+
+
+
+
 

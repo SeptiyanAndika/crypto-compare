@@ -1,61 +1,25 @@
-const axios = require("axios");
 const async = require("async");
-const currenyLayerKey = '';
+const adapter = require("./adapter");
 
 class Price{
-	getGeminiTicker(currencyPair,cb){
-		axios.get(`https://api.gemini.com/v1/pubticker/${currencyPair}`).then(result=>{
-			cb(null,result.data)
-		}).catch(err=>{
-			if(err.response && err.response.data){
-				cb(err.response.data,null);
-			}else{
-				cb(err,null);
-			}
-		});
-	}
-
-	getBitcoinIdTicker(currencyPair,cb){
-		axios.get(`https://vip.bitcoin.co.id/api/${currencyPair}/ticker`).then(result=>{
-			cb(null,result.data)
-		}).catch(err=>{
-			if(err.response && err.response.data){
-				cb(err.response.data,null);
-			}else{
-				cb(err,null);
-			}
-		});
-	}
-
-	getCurrencyLayerPrice(source,currencies,cb){
-		axios.get(`http://apilayer.net/api/live?access_key=${currenyLayerKey}&source=${source}&currencies=${currencies}`).then(result=>{
-			cb(null,result.data)
-		}).catch(err=>{
-			if(err.response && err.response.data){
-				cb(err.response.data,null);
-			}else{
-				cb(err,null);
-			}
-		});
-	}
-
-	compare(cb){
-		let workers={};
+	
+	compareGeminiBitcoinId(cb){
+		let workers ={};
 		let self = this;
-		workers['geminiBTC'] = function(cb){
-				self.getGeminiTicker("BTCUSD",cb);
+		workers['Gemini_BTC'] = function(cb){
+			adapter.getGeminiTicker("BTCUSD",cb);
 		}
-		workers['geminiETH'] = function(cb){
-				self.getGeminiTicker("ETHUSD",cb);
+		workers['Gemini_ETH'] = function(cb){
+			adapter.getGeminiTicker("ETHUSD",cb);
 		}
-		workers['botcoinIdBTC'] = function(cb){
-				self.getBitcoinIdTicker("btc_idr",cb);
+		workers['BitcoinId_BTC'] = function(cb){
+			adapter.getBitcoinIdTicker("btc_idr",cb);
 		}
-		workers['botcoinIdETH'] = function(cb){
-				self.getBitcoinIdTicker("eth_idr",cb);
+		workers['BitcoinId_ETH'] = function(cb){
+			adapter.getBitcoinIdTicker("eth_idr",cb);
 		}
-		workers['USDIDR'] = function(cb){
-				self.getCurrencyLayerPrice("USD","IDR",cb);
+		workers['Rate'] = function(cb){
+			adapter.getCurrencyLayerPrice("USD","IDR",cb);
 		}
 
 		async.parallel(workers,(err,result)=>{
@@ -63,61 +27,253 @@ class Price{
 				console.log(err);
 				cb(err,null);
 			}
-			let BTCIDR_Gemini = Math.ceil(result['geminiBTC'].ask * result['USDIDR'].quotes["USDIDR"]);
-			let ETHIDR_Gemini = Math.ceil(result['geminiETH'].ask * result['USDIDR'].quotes["USDIDR"]);
-			let BTCIDR_BitcoinId = result['botcoinIdBTC'].ticker.sell;
-			let ETHIDR_BitcoinId = result['botcoinIdETH'].ticker.sell;
-			let diffBTC = BTCIDR_BitcoinId-BTCIDR_Gemini;
-			let diffETH = ETHIDR_BitcoinId-ETHIDR_Gemini;
-			let resultCompare ={
-				BTC:{
-					"Gemini":self.rupiahFormat(BTCIDR_Gemini),
-					"Bitcoin.co.id":self.rupiahFormat(BTCIDR_BitcoinId),
-					"difference":self.rupiahFormat(diffBTC),
-					"percentage":((diffBTC/BTCIDR_Gemini)*100).toFixed(2)+"%"
-				},
-				ETH:{
-					"Gemini":self.rupiahFormat(ETHIDR_Gemini),
-					"Bitcoin.co.id":self.rupiahFormat(ETHIDR_BitcoinId),
-					"difference":self.rupiahFormat(diffETH),
-					"percentage":((diffETH/ETHIDR_Gemini)*100).toFixed(2)+"%"
-				},
-				
+			let resultCompare={};
+			result['BitcoinId_BTC'] = self.bitcoinCoIdPriceToUSD(result['BitcoinId_BTC'],result['Rate']);
+			result['BitcoinId_ETH'] = self.bitcoinCoIdPriceToUSD(result['BitcoinId_ETH'],result['Rate']);
+			if(Number(result['Gemini_BTC'].mid)<Number(result['BitcoinId_BTC'].mid)){
+				let diff = Number(result['BitcoinId_BTC'].bid)- Number(result['Gemini_BTC'].ask);
+				resultCompare['BTC']= {
+					"Gemini":result['Gemini_BTC'].ask,
+					"BitcoinId":result['BitcoinId_BTC'].bid,
+					"difference":diff.toFixed(2),
+					"percentage":((diff/Number(result['Gemini_BTC'].ask))*100).toFixed(2)+"%",
+					"Message":"Gemini ask BitcoinId bid"
+				};
+			}else{
+				let diff = Number(result['Gemini_BTC'].bid)- Number(result['BitcoinId_BTC'].ask);
+				resultCompare['BTC']= {
+					"Gemini":result['Gemini_BTC'].bid,
+					"BitcoinId":result['BitcoinId_BTC'].ask,
+					"difference":diff.toFixed(2),
+					"percentage":((diff/Number(result['BitcoinId_BTC'].ask))*100).toFixed(2)+"%",
+					"Message":"BitcoinId ask Gemini bid"
+				};
 			}
-			cb(null,resultCompare)
+
+			if(Number(result['Gemini_ETH'].mid)<Number(result['BitcoinId_ETH'].mid)){
+				let diff = Number(result['BitcoinId_ETH'].bid)- Number(result['Gemini_ETH'].ask);
+				resultCompare['ETH']= {
+					"Gemini":result['Gemini_ETH'].ask,
+					"BitcoinId":result['BitcoinId_ETH'].bid,
+					"difference":diff.toFixed(2),
+					"percentage":((diff/Number(result['Gemini_ETH'].ask))*100).toFixed(2)+"%",
+					"Message":"Gemini ask BitcoinId bid"
+				};
+			}else{
+				let diff = Number(result['Gemini_ETH'].bid)- Number(result['BitcoinId_ETH'].ask);
+				resultCompare['ETH']= {
+					"Gemini":result['Gemini_ETH'].bid,
+					"BitcoinId":result['BitcoinId_ETH'].ask,
+					"difference":diff.toFixed(2),
+					"percentage":((diff/Number(result['BitcoinId_ETH'].ask))*100).toFixed(2)+"%",
+					"Message":"BitcoinId ask Gemini bid"
+				};
+			}
+			
+			cb(null,{compare:resultCompare,rate:result['Rate']["USDIDR"]})
 		})
 	}
 
-	rupiahFormat(bilangan){
-		let	number_string = bilangan;
-		if(number_string.toString){
-			number_string = bilangan.toString();
+	compareQuioneBitcoinId(cb){
+		let workers ={};
+		let self = this;
+		workers['Quoine_BTC'] = function(cb){
+			adapter.getQuoineTicker("BTCUSD",cb);
 		}
-		let split	= number_string.split(',');
-		let sisa 	= split[0].length % 3;
-		let rupiah 	= split[0].substr(0, sisa);
-		let ribuan 	= split[0].substr(sisa).match(/\d{1,3}/gi);
-		
-		if (ribuan) {
-			let separator = sisa ? '.' : '';
-			rupiah += separator + ribuan.join('.');
+		workers['Quoine_ETH'] = function(cb){
+			adapter.getQuoineTicker("ETHUSD",cb);
 		}
-		rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-		return "Rp. "+rupiah;
+		workers['BitcoinId_BTC'] = function(cb){
+			adapter.getBitcoinIdTicker("btc_idr",cb);
+		}
+		workers['BitcoinId_ETH'] = function(cb){
+			adapter.getBitcoinIdTicker("eth_idr",cb);
+		}
+		workers['Rate'] = function(cb){
+			adapter.getCurrencyLayerPrice("USD","IDR",cb);
+		}
+
+		async.parallel(workers,(err,result)=>{
+			if(err){
+				console.log(err);
+				cb(err,null);
+			}
+			let resultCompare={};
+			result['BitcoinId_BTC'] = self.bitcoinCoIdPriceToUSD(result['BitcoinId_BTC'],result['Rate']);
+			result['BitcoinId_ETH'] = self.bitcoinCoIdPriceToUSD(result['BitcoinId_ETH'],result['Rate']);
+			if(Number(result['Quoine_BTC'].mid)<Number(result['BitcoinId_BTC'].mid)){
+				let diff = Number(result['BitcoinId_BTC'].bid)- Number(result['Quoine_BTC'].ask);
+				resultCompare['BTC']= {
+					"Quoine":result['Quoine_BTC'].ask,
+					"BitcoinId":result['BitcoinId_BTC'].bid,
+					"difference":diff.toFixed(2),
+					"percentage":((diff/Number(result['Quoine_BTC'].ask))*100).toFixed(2)+"%",
+					"Message":"Quoine ask BitcoinId bid"
+				};
+			}else{
+				let diff = Number(result['Quoine_BTC'].bid)- Number(result['BitcoinId_BTC'].ask);
+				resultCompare['BTC']= {
+					"Quoine":result['Quoine_BTC'].bid,
+					"BitcoinId":result['BitcoinId_BTC'].ask,
+					"difference":diff.toFixed(2),
+					"percentage":((diff/Number(result['BitcoinId_BTC'].ask))*100).toFixed(2)+"%",
+					"Message":"BitcoinId ask Quoine bid"
+				};
+			}
+
+			if(Number(result['Quoine_ETH'].mid)<Number(result['BitcoinId_ETH'].mid)){
+				let diff = Number(result['BitcoinId_ETH'].bid)- Number(result['Quoine_ETH'].ask);
+				resultCompare['ETH']= {
+					"Quoine":result['Quoine_ETH'].ask,
+					"BitcoinId":result['BitcoinId_ETH'].bid,
+					"difference":diff.toFixed(2),
+					"percentage":((diff/Number(result['Quoine_ETH'].ask))*100).toFixed(2)+"%",
+					"Message":"Quoine ask BitcoinId bid"
+				};
+			}else{
+				let diff = Number(result['Quoine_ETH'].bid)- Number(result['BitcoinId_ETH'].ask);
+				resultCompare['ETH']= {
+					"Quoine":result['Quoine_ETH'].bid,
+					"BitcoinId":result['BitcoinId_ETH'].ask,
+					"difference":diff.toFixed(2),
+					"percentage":((diff/Number(result['BitcoinId_ETH'].ask))*100).toFixed(2)+"%",
+					"Message":"BitcoinId ask Quoine bid"
+				};
+			}
+			
+			cb(null,{compare:resultCompare,rate:result['Rate']["USDIDR"]})
+		})
 	}
 
-	getCompareMessage(cb){
-		this.compare((err,result)=>{
+	compareGeminiQuione(cb){
+		let workers ={};
+		let self = this;
+		workers['Gemini_BTC'] = function(cb){
+			adapter.getGeminiTicker("BTCUSD",cb);
+		}
+		workers['Gemini_ETH'] = function(cb){
+			adapter.getGeminiTicker("ETHUSD",cb);
+		}
+
+		workers['Quoine_BTC'] = function(cb){
+			adapter.getQuoineTicker("BTCUSD",cb);
+		}
+		workers['Quoine_ETH'] = function(cb){
+			adapter.getQuoineTicker("ETHUSD",cb);
+		}
+
+		async.parallel(workers,(err,result)=>{
+			if(err){
+				console.log(err);
+				cb(err,null);
+			}
+			let resultCompare={};
+			if(Number(result['Gemini_BTC'].mid)<Number(result['Quoine_BTC'].mid)){
+				let diff = Number(result['Quoine_BTC'].bid)- Number(result['Gemini_BTC'].ask);
+				resultCompare['BTC']= {
+					"Gemini":result['Gemini_BTC'].ask,
+					"Quoine":result['Quoine_BTC'].bid,
+					"difference":diff.toFixed(2),
+					"percentage":((diff/Number(result['Gemini_BTC'].ask))*100).toFixed(2)+"%",
+					"Message":"Gemini ask Quoine bid"
+				};
+			}else{
+				let diff = Number(result['Gemini_BTC'].bid)- Number(result['Quoine_BTC'].ask);
+				resultCompare['BTC']= {
+					"Gemini":result['Gemini_BTC'].bid,
+					"Quoine":result['Quoine_BTC'].ask,
+					"difference":diff.toFixed(2),
+					"percentage":((diff/Number(result['Quoine_BTC'].ask))*100).toFixed(2)+"%",
+					"Message":"Quoine ask Gemini bid"
+				};
+			}
+
+			if(Number(result['Gemini_ETH'].mid)<Number(result['Quoine_ETH'].mid)){
+				let diff = Number(result['Quoine_ETH'].bid)- Number(result['Gemini_ETH'].ask);
+				resultCompare['ETH']= {
+					"Gemini":result['Gemini_ETH'].bid,
+					"Quoine":result['Quoine_ETH'].ask,
+					"difference":diff.toFixed(2),
+					"percentage":((diff/Number(result['Gemini_ETH'].ask))*100).toFixed(2)+"%",
+					"Message":"Gemini ask Quoine bid"
+				};
+			}else{
+				let diff = Number(result['Gemini_ETH'].bid)- Number(result['Quoine_ETH'].ask);
+				resultCompare['ETH']= {
+					"Gemini":result['Gemini_ETH'].bid,
+					"Quoine":result['Quoine_ETH'].ask,
+					"difference":diff.toFixed(2),
+					"percentage":((diff/Number(result['Quoine_ETH'].ask))*100).toFixed(2)+"%",
+					"Message":"Gemini ask Quoine bid"
+				};
+			}
+			cb(null,{compare:resultCompare,rate:null})
+		})
+	}
+
+	bitcoinCoIdPriceToUSD(result,rates){
+		let temp = result;
+		temp['bid'] = temp.sell/rates['USDIDR']; 
+		temp['bid'] = temp['bid'].toFixed(2);
+		temp['ask'] = temp.buy/rates['USDIDR']; 
+		temp['ask'] = temp['ask'].toFixed(2);
+		temp['mid'] = ((Number(temp['ask'])+Number(temp['bid']))/2).toFixed(2);
+		delete temp['buy'];
+		delete temp['sell'];
+		return temp;
+	}
+	
+
+	getCompareMessage(index,cb){
+		let functionNames=['compareGeminiBitcoinId','compareQuioneBitcoinId','compareGeminiQuione'];
+		this[functionNames[index]]((err,result)=>{
+			if(err){
+				cb("Error Getting Price, Plese try again later");
+			}else{
+				let message="";
+				Object.keys(result.compare).forEach(function(key) {
+					let currency=result.compare[key];
+					message+=`*${key}*\n`;
+					Object.keys(currency).forEach(function(key_currency) {
+						message+=`${key_currency} : ${currency[key_currency]}\n`;
+					});
+					message+=`\n`;
+				});
+				if(result.rate!=null){
+					message+=`*Rate* : ${result.rate} USDIDR`;
+				}
+				cb(message);
+			}
+		});
+	}
+
+	getCompareAllMessage(cb){
+		let workers ={};
+		let self = this;
+		workers['Gemini BitcoinId']= function(cb){
+			self.getCompareMessage(0,message=>{
+				cb(null,message);
+			})
+		}
+		workers['Quione BitcoinId']= function(cb){
+			self.getCompareMessage(1,message=>{
+				cb(null,message);
+			})
+		}
+
+		workers['Gemini Quione']= function(cb){
+			self.getCompareMessage(2,message=>{
+				cb(null,message);
+			})
+		}
+		async.parallel(workers,(err,result)=>{
 			if(err){
 				cb("Error Getting Price, Plese try again later");
 			}else{
 				let message="";
 				Object.keys(result).forEach(function(key) {
-					let currency=result[key];
-					message+=`*${key}*\n`;
-					Object.keys(currency).forEach(function(key_currency) {
-						message+=`${key_currency} : ${currency[key_currency]}\n`;
-					});
+					message+=`\n\n*${key}*\n\n`;
+					message+=`${result[key]}`;
 				});
 				cb(message);
 			}
@@ -126,4 +282,3 @@ class Price{
 }
 
 module.exports = new Price();
-
