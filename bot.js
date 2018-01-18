@@ -1,5 +1,5 @@
 module.exports = function(db,subscribers,bot,price){
-	bot.onText(/\/hi/, (msg, match) => {  
+	bot.onText(/\/hi$/, (msg, match) => {  
 		const chatId = msg.chat.id; 
 		const start = new Date();
 		price.getCompareAllMessage(resp=>{
@@ -16,7 +16,7 @@ module.exports = function(db,subscribers,bot,price){
  
 	});
 
-	bot.onText(/\/hi1/, (msg, match) => {  
+	bot.onText(/\/hi1$/, (msg, match) => {  
 		const chatId = msg.chat.id; 
 		const start = new Date();
 		price.getCompareMessage(0,resp=>{
@@ -32,7 +32,7 @@ module.exports = function(db,subscribers,bot,price){
 		});
 	});
 
-	bot.onText(/\/hi2/, (msg, match) => {  
+	bot.onText(/\/hi2$/, (msg, match) => {  
 		const chatId = msg.chat.id; 
 		const start = new Date();
 		price.getCompareMessage(1,resp=>{
@@ -48,7 +48,7 @@ module.exports = function(db,subscribers,bot,price){
 		});
 	});
 
-	bot.onText(/\/hi3/, (msg, match) => {  
+	bot.onText(/\/hi3$/, (msg, match) => {  
 		const chatId = msg.chat.id; 
 		const start = new Date();
 		price.getCompareMessage(2,resp=>{
@@ -64,7 +64,7 @@ module.exports = function(db,subscribers,bot,price){
 		});
 	});
 
-	bot.onText(/\/subscribe/, (msg, match) => {
+	bot.onText(/\/subscribe$/, (msg, match) => {
 		const chatId = msg.chat.id; 
 		var users = subscribers.find({chatId: chatId});
 		if(users.length==0){
@@ -88,7 +88,7 @@ module.exports = function(db,subscribers,bot,price){
 	});
 
 
-	bot.onText(/\/unsubscribe/, (msg, match) => {
+	bot.onText(/\/unsubscribe$/, (msg, match) => {
 		const chatId = msg.chat.id; 
 		var users = subscribers.find({chatId: chatId});
 		if(users.length==0){
@@ -109,7 +109,7 @@ module.exports = function(db,subscribers,bot,price){
 
 	});
 
-	bot.onText(/\/status/, (msg, match) => {
+	bot.onText(/\/status$/, (msg, match) => {
 		const chatId = msg.chat.id; 
 		var users = subscribers.find({chatId: chatId});
 		if(users.length==0){
