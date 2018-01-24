@@ -6,15 +6,15 @@ const price = require('./price');
 const token = '';
 const bot = new TelegramBot(token, {polling: true});
 
-db.loadDatabase({}, function() {
-	subscribers  = db.getCollection('subscriber');
-	if(subscribers==null){
-		subscribers  = db.addCollection('subscriber');
-	}
-	
-	require("./bot")(db,subscribers,bot,price);
-	require("./scheduler")(subscribers,bot,price);
-	
+db.loadDatabase({}, function () {
+    subscribers = db.getCollection('subscriber');
+    if (subscribers == null) {
+        subscribers = db.addCollection('subscriber');
+    }
+
+    require("./bot")(db, subscribers, bot, price);
+    require("./scheduler")(subscribers, bot, price);
+
 });
 
 
