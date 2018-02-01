@@ -127,4 +127,50 @@ module.exports = function(db,table,bot,price){
 		}
 
 	});
+
+    bot.onText(/\/alert/, (msg, match) => {
+        const chatId = msg.chat.id;
+        var users = table.alert.find({chatId: chatId});
+        if(users.length==0){
+            table.alert.insert({
+                chatId: chatId
+            });
+            db.saveDatabase();
+            bot.sendMessage(chatId, "Success subscribe alert, will get notify if have different 5%", {parse_mode: 'Markdown'}).then(res=>{
+                console.log("succes send message to "+chatId);
+            }).catch(err=>{
+                console.log(err);
+            });
+        }else{
+            bot.sendMessage(chatId, "Already subscribe alert, will get notify if have different 5%", {parse_mode: 'Markdown'}).then(res=>{
+                console.log("succes send message to "+chatId);
+            }).catch(err=>{
+                console.log(err);
+            });
+        }
+
+    });
+
+
+    bot.onText(/\/noalert/, (msg, match) => {
+        const chatId = msg.chat.id;
+        var users = table.alert.find({chatId: chatId});
+        if(users.length==0){
+            bot.sendMessage(chatId, "User not subscribe alert", {parse_mode: 'Markdown'}).then(res=>{
+                console.log("succes send message to "+chatId);
+            }).catch(err=>{
+                console.log(err);
+            });
+        }else{
+            table.alert.remove(users);
+            db.saveDatabase();
+            bot.sendMessage(chatId, "Success unsubscribe alert", {parse_mode: 'Markdown'}).then(res=>{
+                console.log("succes send message to "+chatId);
+            }).catch(err=>{
+                console.log(err);
+            });
+        }
+
+    });
+
 }
