@@ -37,6 +37,7 @@ class Price {
                     "BitcoinId": result['BitcoinId_BTC'].bid,
                     "difference": diff.toFixed(2),
                     "percentage": ((diff / Number(result['Gemini_BTC'].ask)) * 100).toFixed(2) + "%",
+                    "percentageNumber": ((diff / Number(result['Gemini_BTC'].ask)) * 100),
                     "Message": "Gemini ask BitcoinId bid"
                 };
             } else {
@@ -46,6 +47,7 @@ class Price {
                     "BitcoinId": result['BitcoinId_BTC'].ask,
                     "difference": diff.toFixed(2),
                     "percentage": ((diff / Number(result['BitcoinId_BTC'].ask)) * 100).toFixed(2) + "%",
+                    "percentageNumber": ((diff / Number(result['BitcoinId_BTC'].ask)) * 100),
                     "Message": "BitcoinId ask Gemini bid"
                 };
             }
@@ -57,6 +59,7 @@ class Price {
                     "BitcoinId": result['BitcoinId_ETH'].bid,
                     "difference": diff.toFixed(2),
                     "percentage": ((diff / Number(result['Gemini_ETH'].ask)) * 100).toFixed(2) + "%",
+                    "percentageNumber": ((diff / Number(result['Gemini_ETH'].ask)) * 100),
                     "Message": "Gemini ask BitcoinId bid"
                 };
             } else {
@@ -66,6 +69,7 @@ class Price {
                     "BitcoinId": result['BitcoinId_ETH'].ask,
                     "difference": diff.toFixed(2),
                     "percentage": ((diff / Number(result['BitcoinId_ETH'].ask)) * 100).toFixed(2) + "%",
+                    "percentageNumber": ((diff / Number(result['BitcoinId_ETH'].ask)) * 100),
                     "Message": "BitcoinId ask Gemini bid"
                 };
             }
@@ -108,6 +112,7 @@ class Price {
                     "BitcoinId": result['BitcoinId_BTC'].bid,
                     "difference": diff.toFixed(2),
                     "percentage": ((diff / Number(result['Quoine_BTC'].ask)) * 100).toFixed(2) + "%",
+                    "percentageNumber": ((diff / Number(result['Quoine_BTC'].ask)) * 100),
                     "Message": "Quoine ask BitcoinId bid"
                 };
             } else {
@@ -117,6 +122,7 @@ class Price {
                     "BitcoinId": result['BitcoinId_BTC'].ask,
                     "difference": diff.toFixed(2),
                     "percentage": ((diff / Number(result['BitcoinId_BTC'].ask)) * 100).toFixed(2) + "%",
+                    "percentageNumber": ((diff / Number(result['BitcoinId_BTC'].ask)) * 100),
                     "Message": "BitcoinId ask Quoine bid"
                 };
             }
@@ -128,6 +134,7 @@ class Price {
                     "BitcoinId": result['BitcoinId_ETH'].bid,
                     "difference": diff.toFixed(2),
                     "percentage": ((diff / Number(result['Quoine_ETH'].ask)) * 100).toFixed(2) + "%",
+                    "percentageNumber": ((diff / Number(result['Quoine_ETH'].ask)) * 100),
                     "Message": "Quoine ask BitcoinId bid"
                 };
             } else {
@@ -137,6 +144,7 @@ class Price {
                     "BitcoinId": result['BitcoinId_ETH'].ask,
                     "difference": diff.toFixed(2),
                     "percentage": ((diff / Number(result['BitcoinId_ETH'].ask)) * 100).toFixed(2) + "%",
+                    "percentageNumber": ((diff / Number(result['BitcoinId_ETH'].ask)) * 100),
                     "Message": "BitcoinId ask Quoine bid"
                 };
             }
@@ -181,6 +189,7 @@ class Price {
                     "Quoine": result['Quoine_BTC'].bid,
                     "difference": diff.toFixed(2),
                     "percentage": ((diff / Number(result['Gemini_BTC'].ask)) * 100).toFixed(2) + "%",
+                    "percentageNumber": ((diff / Number(result['Gemini_BTC'].ask)) * 100),
                     "Message": "Gemini ask Quoine bid"
                 };
             } else {
@@ -190,6 +199,7 @@ class Price {
                     "Quoine": result['Quoine_BTC'].ask,
                     "difference": diff.toFixed(2),
                     "percentage": ((diff / Number(result['Quoine_BTC'].ask)) * 100).toFixed(2) + "%",
+                    "percentageNumber": ((diff / Number(result['Quoine_BTC'].ask)) * 100),
                     "Message": "Quoine ask Gemini bid"
                 };
             }
@@ -201,6 +211,7 @@ class Price {
                     "Quoine": result['Quoine_ETH'].ask,
                     "difference": diff.toFixed(2),
                     "percentage": ((diff / Number(result['Gemini_ETH'].ask)) * 100).toFixed(2) + "%",
+                    "percentageNumber": ((diff / Number(result['Gemini_ETH'].ask)) * 100),
                     "Message": "Gemini ask Quoine bid"
                 };
             } else {
@@ -210,6 +221,7 @@ class Price {
                     "Quoine": result['Quoine_ETH'].ask,
                     "difference": diff.toFixed(2),
                     "percentage": ((diff / Number(result['Quoine_ETH'].ask)) * 100).toFixed(2) + "%",
+                    "percentageNumber": ((diff / Number(result['Quoine_ETH'].ask)) * 100),
                     "Message": "Gemini ask Quoine bid"
                 };
             }
@@ -239,6 +251,7 @@ class Price {
                 cb("Error Getting Price, Plese try again later");
             } else {
                 let message = "";
+                delete result.compare["percentageNumber"];
                 Object.keys(result.compare).forEach(function (key) {
                     let currency = result.compare[key];
                     message += `*${key}*\n`;
