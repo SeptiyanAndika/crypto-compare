@@ -1,4 +1,4 @@
-module.exports = function(db,subscribers,bot,price){
+module.exports = function(db,table,bot,price){
 	bot.onText(/\/hi$/, (msg, match) => {  
 		const chatId = msg.chat.id; 
 		const start = new Date();
@@ -66,9 +66,9 @@ module.exports = function(db,subscribers,bot,price){
 
 	bot.onText(/\/subscribe$/, (msg, match) => {
 		const chatId = msg.chat.id; 
-		var users = subscribers.find({chatId: chatId});
+		var users = table.subscribers.find({chatId: chatId});
 		if(users.length==0){
-			subscribers.insert({
+            table.subscribers.insert({
 				chatId: chatId
 			});
 			db.saveDatabase();
@@ -90,7 +90,7 @@ module.exports = function(db,subscribers,bot,price){
 
 	bot.onText(/\/unsubscribe$/, (msg, match) => {
 		const chatId = msg.chat.id; 
-		var users = subscribers.find({chatId: chatId});
+		var users = table.subscribers.find({chatId: chatId});
 		if(users.length==0){
 			bot.sendMessage(chatId, "User Not Subscribe", {parse_mode: 'Markdown'}).then(res=>{
 				console.log("succes send message to "+chatId);
@@ -98,7 +98,7 @@ module.exports = function(db,subscribers,bot,price){
 				console.log(err);
 			});
 		}else{
-			subscribers.remove(users);
+            table.subscribers.remove(users);
 			db.saveDatabase();
 			bot.sendMessage(chatId, "Success Unsubscribe", {parse_mode: 'Markdown'}).then(res=>{
 				console.log("succes send message to "+chatId);
@@ -111,7 +111,7 @@ module.exports = function(db,subscribers,bot,price){
 
 	bot.onText(/\/status$/, (msg, match) => {
 		const chatId = msg.chat.id; 
-		var users = subscribers.find({chatId: chatId});
+		var users = table.subscribers.find({chatId: chatId});
 		if(users.length==0){
 			bot.sendMessage(chatId, "Status Unsubscribe", {parse_mode: 'Markdown'}).then(res=>{
 				console.log("succes send message to "+chatId);

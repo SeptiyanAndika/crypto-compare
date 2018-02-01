@@ -12,8 +12,13 @@ db.loadDatabase({}, function () {
         subscribers = db.addCollection('subscriber');
     }
 
-    require("./bot")(db, subscribers, bot, price);
-    require("./scheduler")(subscribers, bot, price);
+    alert = db.getCollection('alert');
+    if (alert == null) {
+        alert = db.addCollection('alert');
+    }
+
+    require("./bot")(db, {subscribers:subscribers,alert:alert}, bot, price);
+    require("./scheduler")({subscribers:subscribers,alert:alert}, bot, price);
 
 });
 

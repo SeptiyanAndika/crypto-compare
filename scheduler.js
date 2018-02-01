@@ -1,11 +1,11 @@
 const schedule = require('node-schedule');
 const async = require('async');
 
-module.exports = function(subscribers,bot,price){
+module.exports = function(table,bot,price){
 	
-	var jobs = schedule.scheduleJob('*/15 * * * *', function(fireDate){
+	var jobsSubscribers = schedule.scheduleJob('*/15 * * * *', function(fireDate){
 		console.log("schedule start "+new Date().toISOString())
-		var allIds = subscribers.data.reduce(function (allId, item) { 
+		var allIds = table.subscribers.data.reduce(function (allId, item) {
 			allId.push(item.chatId)
 			return allId;
 		}, []);
