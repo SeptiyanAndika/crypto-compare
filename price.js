@@ -251,16 +251,43 @@ class Price {
                 cb("Error Getting Price, Plese try again later");
             } else {
                 let message = "";
-                delete result.compare["percentageNumber"];
                 Object.keys(result.compare).forEach(function (key) {
                     let currency = result.compare[key];
                     message += `*${key}*\n`;
+                    delete currency["percentageNumber"];
                     Object.keys(currency).forEach(function (key_currency) {
                         message += `${key_currency} : ${currency[key_currency]}\n`;
                     });
                     message += `\n`;
                 });
                 if (result.rate != null) {
+                    message += `*Rate* : ${result.rate} ${result.currencyPair} `;
+                }
+                cb(message);
+            }
+        });
+    }
+
+    getCompareMessageWithLimit(index, limit, cb) {
+        let functionNames = ['compareGeminiBitcoinId', 'compareQuioneBitcoinId', 'compareGeminiQuione'];
+        this[functionNames[index]]((err, result) => {
+            if (err) {
+                cb("Error Getting Price, Plese try again later");
+            } else {
+                let message = "";
+                Object.keys(result.compare).forEach(function (key) {
+
+                    let currency = result.compare[key];
+                    if(currency.percentageNumber>=limit) {
+                        message += `*${key}*\n`;
+                        delete currency["percentageNumber"];
+                        Object.keys(currency).forEach(function (key_currency) {
+                            message += `${key_currency} : ${currency[key_currency]}\n`;
+                        });
+                        message += `\n`;
+                    }
+                });
+                if (message!="" && result.rate != null) {
                     message += `*Rate* : ${result.rate} ${result.currencyPair} `;
                 }
                 cb(message);
