@@ -55,8 +55,11 @@ class Adapter {
     }
 
     getLunoTicker(currencyPair, cb) {
+        currencyPair = currencyPair.replace("BTC","XBT");
+        let baseCode = currencyPair.substring(0,3);
+        let counterCode = currencyPair.substring(3,6);
         axios.get(`https://www.luno.com/ajax/1/price_chart?currency=${currencyPair}`).then(result => {
-            let price = _.filter(result.data.availablePairs,{counterCode:'IDR'})
+            let price = _.filter(result.data.availablePairs,{baseCode:baseCode,counterCode:counterCode})
             price=price[0];
             cb(null, {
                 bid: Number(price.price),
