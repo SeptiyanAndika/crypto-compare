@@ -1,6 +1,6 @@
 const axios = require("axios");
 const currenyLayerKey = '';
-
+const _ = require('lodash');
 class Adapter {
     getGeminiTicker(currencyPair, cb) {
         axios.get(`https://api.gemini.com/v1/pubticker/${currencyPair}`).then(result => {
@@ -25,9 +25,43 @@ class Adapter {
     getBitcoinIdTicker(currencyPair, cb) {
         axios.get(`https://vip.bitcoin.co.id/api/${currencyPair}/ticker`).then(result => {
             cb(null, {
-                buy: result.data.ticker.buy,
-                sell: result.data.ticker.sell,
+                bid: result.data.ticker.buy,
+                ask: result.data.ticker.sell,
                 mid: ((Number(result.data.ticker.buy) + Number(result.data.ticker.sell)) / 2).toFixed(2)
+            })
+        }).catch(err => {
+            if (err.response && err.response.data) {
+                cb(err.response.data, null);
+            } else {
+                cb(err, null);
+            }
+        });
+    }
+
+    getTokoTicker(currencyPair, cb) {
+        axios.get(`https://service.tokocrypto.com/client/rates/ticker?currencyPair=${currencyPair}`).then(result => {
+            cb(null, {
+                bid: result.data.data.Open,
+                ask: result.data.data.Open,
+                mid: result.data.data.Open,
+            })
+        }).catch(err => {
+            if (err.response && err.response.data) {
+                cb(err.response.data, null);
+            } else {
+                cb(err, null);
+            }
+        });
+    }
+
+    getLunoTicker(currencyPair, cb) {
+        axios.get(`https://www.luno.com/ajax/1/price_chart?currency=${currencyPair}`).then(result => {
+            let price = _.filter(result.data.availablePairs,{counterCode:'IDR'})
+            price=price[0];
+            cb(null, {
+                bid: Number(price.price),
+                ask: Number(price.price),
+                mid: Number(price.price),
             })
         }).catch(err => {
             if (err.response && err.response.data) {

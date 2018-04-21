@@ -105,6 +105,7 @@ class Price {
             let resultCompare = {};
             result['BitcoinId_BTC'] = self.priceToUSD(result['BitcoinId_BTC'], result['Rate']["USDIDR"]);
             result['BitcoinId_ETH'] = self.priceToUSD(result['BitcoinId_ETH'], result['Rate']["USDIDR"]);
+            console.log(result);
             if (Number(result['Quoine_BTC'].mid) < Number(result['BitcoinId_BTC'].mid)) {
                 let diff = Number(result['BitcoinId_BTC'].bid) - Number(result['Quoine_BTC'].ask);
                 resultCompare['BTC'] = {
@@ -229,6 +230,150 @@ class Price {
         })
     }
 
+    compareTokoBitcoinId(cb){
+        let workers = {};
+        let self = this;
+        workers['Toko_BTC'] = function (cb) {
+            adapter.getTokoTicker("BTCIDR", cb);
+        }
+        workers['Toko_ETH'] = function (cb) {
+            adapter.getTokoTicker("ETHIDR", cb);
+        }
+        workers['BitcoinId_BTC'] = function (cb) {
+            adapter.getBitcoinIdTicker("btc_idr", cb);
+        }
+        workers['BitcoinId_ETH'] = function (cb) {
+            adapter.getBitcoinIdTicker("eth_idr", cb);
+        }
+
+        async.parallel(workers, (err, result) => {
+            if (err) {
+                console.log(err);
+                cb(err, null);
+            }
+            let resultCompare = {};
+            console.log(result);
+
+            if (Number(result['Toko_BTC'].mid) < Number(result['BitcoinId_BTC'].mid)) {
+                let diff = Number(result['BitcoinId_BTC'].bid) - Number(result['Toko_BTC'].ask);
+                resultCompare['BTC'] = {
+                    "Toko": result['Toko_BTC'].ask,
+                    "BitcoinId": result['BitcoinId_BTC'].bid,
+                    "difference": diff.toFixed(2),
+                    "percentage": ((diff / Number(result['Toko_BTC'].ask)) * 100).toFixed(2) + "%",
+                    "percentageNumber": ((diff / Number(result['Toko_BTC'].ask)) * 100),
+                    "Message": "Toko ask BitcoinId bid"
+                };
+            } else {
+                let diff = Number(result['Toko_BTC'].bid) - Number(result['BitcoinId_BTC'].ask);
+                resultCompare['BTC'] = {
+                    "Toko": result['Toko_BTC'].bid,
+                    "BitcoinId": result['BitcoinId_BTC'].ask,
+                    "difference": diff.toFixed(2),
+                    "percentage": ((diff / Number(result['BitcoinId_BTC'].ask)) * 100).toFixed(2) + "%",
+                    "percentageNumber": ((diff / Number(result['BitcoinId_BTC'].ask)) * 100),
+                    "Message": "BitcoinId ask Toko bid"
+                };
+            }
+
+            if (Number(result['Toko_ETH'].mid) < Number(result['BitcoinId_ETH'].mid)) {
+                let diff = Number(result['BitcoinId_ETH'].bid) - Number(result['Toko_ETH'].ask);
+                resultCompare['ETH'] = {
+                    "Toko": result['Toko_ETH'].ask,
+                    "BitcoinId": result['BitcoinId_ETH'].bid,
+                    "difference": diff.toFixed(2),
+                    "percentage": ((diff / Number(result['Toko_ETH'].ask)) * 100).toFixed(2) + "%",
+                    "percentageNumber": ((diff / Number(result['Toko_ETH'].ask)) * 100),
+                    "Message": "Toko ask BitcoinId bid"
+                };
+            } else {
+                let diff = Number(result['Toko_ETH'].bid) - Number(result['BitcoinId_ETH'].ask);
+                resultCompare['ETH'] = {
+                    "Toko": result['Toko_ETH'].bid,
+                    "BitcoinId": result['BitcoinId_ETH'].ask,
+                    "difference": diff.toFixed(2),
+                    "percentage": ((diff / Number(result['BitcoinId_ETH'].ask)) * 100).toFixed(2) + "%",
+                    "percentageNumber": ((diff / Number(result['BitcoinId_ETH'].ask)) * 100),
+                    "Message": "BitcoinId ask Toko bid"
+                };
+            }
+
+            cb(null, {compare: resultCompare})
+        })
+    }
+
+    compareTokoLuno(cb){
+        let workers = {};
+        let self = this;
+        workers['Toko_BTC'] = function (cb) {
+            adapter.getTokoTicker("BTCIDR", cb);
+        }
+        workers['Toko_ETH'] = function (cb) {
+            adapter.getTokoTicker("ETHIDR", cb);
+        }
+        workers['Luno_BTC'] = function (cb) {
+            adapter.getLunoTicker("BTCIDR", cb);
+        }
+        workers['Luno_ETH'] = function (cb) {
+            adapter.getLunoTicker("ETHIDR", cb);
+        }
+
+        async.parallel(workers, (err, result) => {
+            if (err) {
+                console.log(err);
+                cb(err, null);
+            }
+            let resultCompare = {};
+            console.log(result);
+
+            if (Number(result['Toko_BTC'].mid) < Number(result['Luno_BTC'].mid)) {
+                let diff = Number(result['Luno_BTC'].bid) - Number(result['Toko_BTC'].ask);
+                resultCompare['BTC'] = {
+                    "Toko": result['Toko_BTC'].ask,
+                    "Luno": result['Luno_BTC'].bid,
+                    "difference": diff.toFixed(2),
+                    "percentage": ((diff / Number(result['Toko_BTC'].ask)) * 100).toFixed(2) + "%",
+                    "percentageNumber": ((diff / Number(result['Toko_BTC'].ask)) * 100),
+                    "Message": "Toko ask Luno bid"
+                };
+            } else {
+                let diff = Number(result['Toko_BTC'].bid) - Number(result['Luno_BTC'].ask);
+                resultCompare['BTC'] = {
+                    "Toko": result['Toko_BTC'].bid,
+                    "Luno": result['Luno_BTC'].ask,
+                    "difference": diff.toFixed(2),
+                    "percentage": ((diff / Number(result['Luno_BTC'].ask)) * 100).toFixed(2) + "%",
+                    "percentageNumber": ((diff / Number(result['Luno_BTC'].ask)) * 100),
+                    "Message": "Luno ask Toko bid"
+                };
+            }
+
+            if (Number(result['Toko_ETH'].mid) < Number(result['Luno_ETH'].mid)) {
+                let diff = Number(result['Luno_ETH'].bid) - Number(result['Toko_ETH'].ask);
+                resultCompare['ETH'] = {
+                    "Toko": result['Toko_ETH'].ask,
+                    "Luno": result['Luno_ETH'].bid,
+                    "difference": diff.toFixed(2),
+                    "percentage": ((diff / Number(result['Toko_ETH'].ask)) * 100).toFixed(2) + "%",
+                    "percentageNumber": ((diff / Number(result['Toko_ETH'].ask)) * 100),
+                    "Message": "Toko ask Luno bid"
+                };
+            } else {
+                let diff = Number(result['Toko_ETH'].bid) - Number(result['Luno_ETH'].ask);
+                resultCompare['ETH'] = {
+                    "Toko": result['Toko_ETH'].bid,
+                    "Luno": result['Luno_ETH'].ask,
+                    "difference": diff.toFixed(2),
+                    "percentage": ((diff / Number(result['Luno_ETH'].ask)) * 100).toFixed(2) + "%",
+                    "percentageNumber": ((diff / Number(result['Luno_ETH'].ask)) * 100),
+                    "Message": "Luno ask Toko bid"
+                };
+            }
+
+            cb(null, {compare: resultCompare})
+        })
+    }
+
     priceToUSD(result, rate) {
         let temp = result;
         temp['bid'] = temp.sell || temp.bid;
@@ -244,8 +389,9 @@ class Price {
     }
 
 
+
     getCompareMessage(index, cb) {
-        let functionNames = ['compareGeminiBitcoinId', 'compareQuioneBitcoinId', 'compareGeminiQuione'];
+        let functionNames = ['compareGeminiBitcoinId', 'compareTokoBitcoinId', 'compareTokoLuno'];
         this[functionNames[index]]((err, result) => {
             if (err) {
                 cb("Error Getting Price, Plese try again later");
@@ -269,7 +415,7 @@ class Price {
     }
 
     getCompareMessageWithLimit(index, limit, cb) {
-        let functionNames = ['compareGeminiBitcoinId', 'compareQuioneBitcoinId', 'compareGeminiQuione'];
+        let functionNames = ['compareGeminiBitcoinId', 'compareTokoBitcoinId', 'compareTokoLuno'];
         this[functionNames[index]]((err, result) => {
             if (err) {
                 cb("Error Getting Price, Plese try again later");
@@ -303,13 +449,13 @@ class Price {
                 cb(null, message);
             })
         }
-        workers['Quione BitcoinId'] = function (cb) {
+        workers['Toko BitcoinId'] = function (cb) {
             self.getCompareMessage(1, message => {
                 cb(null, message);
             })
         }
 
-        workers['Gemini Quione'] = function (cb) {
+        workers['Toko Luno'] = function (cb) {
             self.getCompareMessage(2, message => {
                 cb(null, message);
             })
